@@ -16,8 +16,8 @@
 
     <div class="max-w-md mx-auto px-4 mt-4">
 
-        <!-- ================= PANTALLA DE LOGIN INTEGRADA ================= -->
-        <div id="view-login" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-xl space-y-6 text-center mt-8">
+        <!-- ================= PANTALLA DE LOGIN CON FIREBASE AUTH ================= -->
+        <div id="view-login" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-xl space-y-4 text-center mt-8">
             <div class="space-y-2">
                 <h1 class="text-3xl font-black tracking-tight text-slate-900">🛺 MOYOAPP</h1>
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Viajes Locales & Mudanzas</p>
@@ -25,20 +25,28 @@
 
             <div class="space-y-3 text-left">
                 <div>
-                    <label class="block text-xs font-black text-slate-500 mb-1 uppercase">Tu Nombre Completo:</label>
-                    <input type="text" id="login-nombre" placeholder="Ej: Juan Pérez" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:outline-amber-400">
+                    <label class="block text-xs font-black text-slate-500 mb-1 uppercase">Correo Electrónico:</label>
+                    <input type="email" id="login-email" placeholder="ejemplo@moyo.com" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-amber-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-black text-slate-500 mb-1 uppercase">Contraseña:</label>
+                    <input type="password" id="login-password" placeholder="******" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-amber-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-black text-slate-500 mb-1 uppercase">Tu Nombre (Solo para nuevos registros):</label>
+                    <input type="text" id="login-nombre" placeholder="Tu Nombre Completo" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-amber-400">
                 </div>
                 <div>
                     <label class="block text-xs font-black text-slate-500 mb-1 uppercase">¿Cómo deseas ingresar?:</label>
-                    <select id="login-rol" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-amber-400">
-                        <option value="pasajero">👤 Ingresar como Cliente (Pedir Viaje / Mudanza)</option>
+                    <select id="login-rol" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-amber-400">
+                        <option value="pasajero">👤 Ingresar como Cliente (Pedir Viaje)</option>
                         <option value="conductor">🛺 Ingresar como Chofer (Ofrecer Servicio)</option>
                     </select>
                 </div>
             </div>
 
             <button id="btn-ingresar-app" class="w-full bg-amber-400 hover:bg-amber-500 text-slate-900 font-black py-4 rounded-xl text-sm uppercase tracking-widest shadow-md transition active:scale-95">
-                Ingresar al Sistema
+                Ingresar / Registrarse
             </button>
         </div>
 
@@ -48,7 +56,6 @@
             <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-md space-y-4 text-center">
                 <h3 class="text-sm font-black text-slate-900">👋 ¡Hola, <span id="txt-nombre-cliente" class="text-amber-500"></span>!</h3>
                 
-                <!-- Caja de Estado de Satélites -->
                 <div id="geo-status-box" class="bg-slate-900 text-white p-5 rounded-2xl border border-slate-800 flex flex-col items-center justify-center gap-2">
                     <div id="geo-icon-loader" class="w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
                     <p id="geo-status-texto" class="text-xs font-black tracking-wide text-amber-300 uppercase">Sincronizando satélites GPS...</p>
@@ -64,7 +71,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">🏁 ¿A dónde vas / Destino Mudanza?:</label>
+                        <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">🏁 ¿A dónde vas / Destino?:</label>
                         <input type="text" id="solicitud-destino" placeholder="Calculando ubicación..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold">
                     </div>
                     <div>
@@ -82,7 +89,6 @@
 
         <!-- ================= CHAT NEGOCIACIÓN PASAJERO ================= -->
         <div id="view-pasajero-chat" class="hidden bg-white rounded-3xl p-4 border border-slate-200 shadow-md space-y-4">
-            <!-- FOTO Y DETALLES DEL CHOFER ASIGNADO (DINÁMICO) -->
             <div id="perfil-chofer-asignado" class="bg-slate-900 text-white p-4 rounded-2xl text-xs flex gap-3 items-center hidden">
                 <img id="chat-p-chofer-foto" src="" class="w-16 h-16 object-cover rounded-xl border border-amber-400 bg-slate-800" alt="Vehículo">
                 <div class="flex-1 space-y-1">
@@ -117,7 +123,7 @@
                 <div class="flex gap-2">
                     <div class="flex-1">
                         <label class="block font-bold text-slate-500 mb-1">🔢 NÚMERO DE PLACA:</label>
-                        <input type="text" id="reg-chofer-placa" placeholder="Ej: M-7041 o A1B-234" class="w-full p-2.5 bg-slate-50 border rounded-xl uppercase font-bold">
+                        <input type="text" id="reg-chofer-placa" placeholder="Ej: M-7041" class="w-full p-2.5 bg-slate-50 border rounded-xl uppercase font-bold">
                     </div>
                     <div class="w-24">
                         <label class="block font-bold text-slate-500 mb-1">🎂 EDAD:</label>
@@ -125,7 +131,7 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-500 mb-1">📸 LINK / URL DE LA FOTO DEL VEHÍCULO:</label>
+                    <label class="block font-bold text-slate-500 mb-1">📸 FOTO DEL VEHÍCULO (URL):</label>
                     <input type="text" id="reg-chofer-foto" placeholder="https://enlace-de-tu-foto.com/imagen.jpg" class="w-full p-2.5 bg-slate-50 border rounded-xl text-slate-600 text-[11px]">
                 </div>
                 <button id="btn-guardar-perfil-chofer" class="w-full bg-emerald-500 text-white font-black py-3 rounded-xl uppercase tracking-wider shadow-md">
@@ -170,6 +176,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot, updateDoc, arrayUnion, collection, query, where, getDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+        // IMPORTAMOS LOS MÓDULOS DE AUTENTICACIÓN
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCA3QYw_DheI0wjUtEZMG7qDnwD8CxJGU4",
@@ -182,6 +190,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
         let viajeIdActual = "";
         let coordenadasPasajeroActual = { lat: null, lng: null };
@@ -190,45 +199,76 @@
         let datosVehiculoChofer = null;
         let usuarioLogueado = null;
 
-        // --- MANEJO DEL LOGIN INTERNO ---
-        function verificarSesionInicial() {
-            const sessionData = localStorage.getItem("moyo_user");
-            if (sessionData) {
-                usuarioLogueado = JSON.parse(sessionData);
-                document.getElementById('view-login').classList.add('hidden');
-                document.getElementById('app-header').classList.remove('hidden');
-                inicializarAppSegunRol();
+        // --- MANEJO DEL ESTADO DE AUTENTICACIÓN REAL ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Si está autenticado en Firebase, buscamos su rol y nombre en Firestore
+                const docRef = doc(db, "usuarios", user.uid);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    usuarioLogueado = docSnap.data();
+                    document.getElementById('view-login').classList.add('hidden');
+                    document.getElementById('app-header').classList.remove('hidden');
+                    inicializarAppSegunRol();
+                } else {
+                    // Fallback si por alguna razón no se guardaron los datos en Firestore
+                    alert("Error al recuperar los datos del perfil.");
+                    await signOut(auth);
+                }
             } else {
-                // Si no hay sesión, se fuerza la vista del login integrado
+                // Si no hay sesión activa
+                usuarioLogueado = null;
                 document.getElementById('view-login').classList.remove('hidden');
                 document.getElementById('app-header').classList.add('hidden');
                 document.getElementById('view-pasajero-solicitud').classList.add('hidden');
+                document.getElementById('view-pasajero-chat').classList.add('hidden');
                 document.getElementById('view-conductor').classList.add('hidden');
                 document.getElementById('view-conductor-registro').classList.add('hidden');
             }
-        }
+        });
 
-        document.getElementById('btn-ingresar-app').addEventListener('click', () => {
+        // BOTÓN INGRESAR / REGISTRARSE
+        document.getElementById('btn-ingresar-app').addEventListener('click', async () => {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value.trim();
             const nombre = document.getElementById('login-nombre').value.trim();
             const rol = document.getElementById('login-rol').value;
 
-            if(!nombre) { alert("Por favor, ingresa tu nombre."); return; }
+            if(!email || !password) { alert("Completa el correo y la contraseña."); return; }
 
-            usuarioLogueado = {
-                id: "user_" + Date.now(),
-                nombre: nombre,
-                rol: rol
-            };
-
-            localStorage.setItem("moyo_user", JSON.stringify(usuarioLogueado));
-            verificarSesionInicial();
+            try {
+                // Intenta iniciar sesión primero
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                // Si el usuario no existe, lo crea automáticamente
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                    if(!nombre) { 
+                        alert("Usuario no registrado. Si eres nuevo, ingresa tu Nombre Completo para registrarte."); 
+                        return; 
+                    }
+                    try {
+                        const resultado = await createUserWithEmailAndPassword(auth, email, password);
+                        // Guarda la información del rol del usuario en la base de datos Firestore
+                        await setDoc(doc(db, "usuarios", resultado.user.uid), {
+                            id: resultado.user.uid,
+                            nombre: nombre,
+                            rol: rol,
+                            email: email
+                        });
+                    } catch (errRegistro) {
+                        alert("Error al crear cuenta: " + errRegistro.message);
+                    }
+                } else {
+                    alert("Error de autenticación: " + error.message);
+                }
+            }
         });
 
-        document.getElementById('btn-logout').addEventListener('click', () => {
+        // BOTÓN SALIR
+        document.getElementById('btn-logout').addEventListener('click', async () => {
             if(geoWatchId) navigator.geolocation.clearWatch(geoWatchId);
-            localStorage.removeItem("moyo_user");
-            usuarioLogueado = null;
-            verificarSesionInicial();
+            await signOut(auth);
         });
 
         function inicializarAppSegunRol() {
@@ -250,7 +290,7 @@
             if (!navigator.geolocation) return;
             document.getElementById('geo-status-texto').innerText = "⏳ SOLICITANDO PERMISO DE GPS...";
 
-            navigator.geolocation.watchPosition(
+            geoWatchId = navigator.geolocation.watchPosition(
                 async (pos) => {
                     coordenadasPasajeroActual.lat = pos.coords.latitude;
                     coordenadasPasajeroActual.lng = pos.coords.longitude;
@@ -273,7 +313,7 @@
                 const data = await response.json();
                 ciudadDetectadaActual = data.address.city || data.address.town || data.address.village || "Tu Ubicación";
                 document.getElementById('app-dinamica-titulo').innerText = `🛺 MOYOAPP - ${ciudadDetectadaActual.toUpperCase()}`;
-                document.getElementById('solicitud-destino').placeholder = `Ej: Plaza o Punto de entrega en ${ciudadDetectadaActual}`;
+                document.getElementById('solicitud-destino').placeholder = `Ej: Destino en ${ciudadDetectadaActual}`;
             } catch {
                 document.getElementById('solicitud-destino').placeholder = "Ej: Ingresa tu destino";
             }
@@ -337,11 +377,11 @@
                     status.classList.remove('hidden');
                     status.innerText = `✅ ¡Trato cerrado! Tu unidad viene por S/. ${v.precioOferta}`;
                 }
-                if (v.estado === "FINALIZADO") { alert("Servicio completado exitosamente."); localStorage.clear(); location.reload(); }
+                if (v.estado === "FINALIZADO") { alert("Servicio completado exitosamente."); location.reload(); }
             });
         }
 
-        // --- GESTIÓN DE PERFIL DEL CONDUCTOR (MUDANZAS Y VEHÍCULOS) ---
+        // --- GESTIÓN DE PERFIL DEL CONDUCTOR ---
         async function comprobarPerfilVehiculo() {
             const docRef = doc(db, "conductores", usuarioLogueado.id);
             let dSnap = await getDoc(docRef);
@@ -436,7 +476,7 @@
 
                         document.getElementById('seccion-negociacion-conductor').classList.remove('hidden');
                         
-                        const abrirMaps = confirm("¿Deseas abrir Google Maps para ver la ubicación del cliente?");
+                        const abrirMaps = confirm("¿Deseas abrir Google Maps?");
                         if (abrirMaps) {
                             window.open(`https://www.google.com/maps/search/?api=1&query=${latCliente},${lngCliente}`, '_blank');
                         }
@@ -489,16 +529,16 @@
                 precioOferta: p, 
                 conductorId: usuarioLogueado.id, 
                 conductorNombre: usuarioLogueado.nombre, 
-                conductorPlaca = datosVehiculoChofer.placa,
-                conductorVehiculoTipo = datosVehiculoChofer.vehiculoTipo,
-                conductorFoto = datosVehiculoChofer.foto
+                conductorPlaca: datosVehiculoChofer.placa,
+                conductorVehiculoTipo: datosVehiculoChofer.vehiculoTipo,
+                conductorFoto: datosVehiculoChofer.foto
             });
         }
         document.getElementById('btn-cerrar-trato').addEventListener('click', pactarTarifaTrato);
 
         async function concluirViajeMoyo() {
             await updateDoc(doc(db, "viajes", viajeIdActual), { estado: "FINALIZADO" });
-            localStorage.clear(); location.reload();
+            location.reload();
         }
         document.getElementById('btn-finalizar').addEventListener('click', concluirViajeMoyo);
 
@@ -510,9 +550,6 @@
             });
             const b = document.getElementById(`chat-box-${rol}`); if(b) { b.innerHTML = h; b.scrollTop = b.scrollHeight; }
         }
-
-        // Ejecutar verificación al cargar
-        verificarSesionInicial();
     </script>
 </body>
 </html>
