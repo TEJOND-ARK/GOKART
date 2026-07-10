@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MoyoApp Premium - GPS WhatsApp Style</title>
+    <title>MoyoApp Premium - GPS Puro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -29,14 +29,14 @@
                 <!-- Caja de Estado de Satélites Estilo WhatsApp -->
                 <div id="geo-status-box" class="bg-slate-900 text-white p-5 rounded-2xl border border-slate-800 flex flex-col items-center justify-center gap-2">
                     <div id="geo-icon-loader" class="w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
-                    <p id="geo-status-texto" class="text-xs font-black tracking-wide text-amber-300 uppercase">Buscando señal GPS en tiempo real...</p>
-                    <p id="geo-coordenadas" class="text-[10px] font-mono text-slate-400">Acepta el permiso en tu pantalla...</p>
+                    <p id="geo-status-texto" class="text-xs font-black tracking-wide text-amber-300 uppercase">Esperando señal satelital GPS...</p>
+                    <p id="geo-coordenadas" class="text-[10px] font-mono text-slate-400">Por favor, dale a "Permitir" si te lo pide el celular</p>
                 </div>
 
                 <div class="space-y-3 text-left">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">🏁 ¿A dónde vas?:</label>
-                        <input type="text" id="solicitud-destino" placeholder="Ej: Plaza de Armas Moyobamba" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold">
+                        <input type="text" id="solicitud-destino" placeholder="Ej: Plaza de Armas Rioja" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">💰 Tu Oferta (S/.):</label>
@@ -45,7 +45,7 @@
                 </div>
 
                 <button id="btn-buscar-moto" disabled class="w-full bg-slate-300 text-slate-500 font-black py-4 rounded-xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition cursor-not-allowed">
-                    Esperando GPS Fiel...
+                    Fijando Satélite Real...
                 </button>
             </div>
         </div>
@@ -117,7 +117,7 @@
         const usuarioLogueado = JSON.parse(sessionData);
         let viajeIdActual = "";
         let coordenadasPasajeroActual = { lat: null, lng: null };
-        let geoWatchId = null; // Guardará el ID de rastreo continuo activo
+        let geoWatchId = null;
 
         document.getElementById('btn-logout').addEventListener('click', () => {
             if(geoWatchId) navigator.geolocation.clearWatch(geoWatchId);
@@ -135,53 +135,46 @@
             verificarPerfilYEscuchar();
         }
 
-        // --- SISTEMA DE SEGUIMIENTO GPS CONTINUO (ESTILO WHATSAPP REAL-TIME) ---
+        // --- ENCHUFADO DIRECTO AL SATÉLITE SIN PLAN B ---
         function obtenerCoordenadasEstiloWhatsApp() {
             if (!navigator.geolocation) {
                 alert("Tu dispositivo móvil no cuenta con hardware GPS compatible.");
-                usarUbicacionManual();
                 return;
             }
 
-            // Forzamos al procesador del celular a encender las antenas a máxima potencia
             const opcionesWhatsApp = { 
-                enableHighAccuracy: true, // Forzar GPS Satelital (Alta precisión)
-                timeout: 6000,            // Espera estricta de 6 segundos
-                maximumAge: 0             // No usar ubicaciones guardadas viejas
+                enableHighAccuracy: true, // Forzar GPS satelital de alta precisión
+                maximumAge: 0             // Exigir datos frescos, no en caché
             };
 
-            // watchPosition mantiene la conexión viva con los satélites en tiempo real
+            // Escucha activa y constante del chip GPS
             geoWatchId = navigator.geolocation.watchPosition(
                 (pos) => {
                     coordenadasPasajeroActual.lat = pos.coords.latitude;
                     coordenadasPasajeroActual.lng = pos.coords.longitude;
                     
-                    // Si ya capturó la coordenada real, detenemos el rastreo para cuidar batería y liberamos la UI
                     if(coordenadasPasajeroActual.lat && coordenadasPasajeroActual.lng) {
-                        navigator.geolocation.clearWatch(geoWatchId);
-                        desbloquearBotonBuscar("📍 GPS Conectado (Precisión Satelital)");
+                        navigator.geolocation.clearWatch(geoWatchId); // Paramos antena para cuidar batería
+                        desbloquearBotonBuscar();
                     }
                 },
                 (error) => {
-                    console.warn("Buscando satélites alternativos o reintentando permisos...", error.message);
-                    // Si el usuario deniega el permiso o el GPS está apagado, salta el Plan B automático
-                    navigator.geolocation.clearWatch(geoWatchId);
-                    usarUbicacionManual();
+                    console.error("Error crítico de lectura GPS:", error.message);
+                    if(error.code === 1) {
+                        document.getElementById('geo-status-texto').innerText = "❌ Permiso Denegado";
+                        document.getElementById('geo-coordenadas').innerText = "Por favor, dale permisos de GPS a Chrome.";
+                        alert("Has bloqueado el GPS. Ve a la configuración de tu Chrome y permite la ubicación.");
+                    } else {
+                        document.getElementById('geo-status-texto').innerText = "⏳ Buscando Señal Satelital...";
+                    }
                 },
                 opcionesWhatsApp
             );
         }
 
-        function usarUbicacionManual() {
-            // Coordenadas céntricas de Moyobamba por si falla el GPS de fábrica del celular
-            coordenadasPasajeroActual.lat = -6.0335; 
-            coordenadasPasajeroActual.lng = -76.9717; 
-            desbloquearBotonBuscar("📍 Ubicación Estimada (Moyobamba Centro)");
-        }
-
-        function desbloquearBotonBuscar(textoEstado) {
+        function desbloquearBotonBuscar() {
             document.getElementById('geo-icon-loader').className = "hidden";
-            document.getElementById('geo-status-texto').innerText = textoEstado;
+            document.getElementById('geo-status-texto').innerText = "📍 GPS Satelital Conectado";
             document.getElementById('geo-coordenadas').innerText = `${coordenadasPasajeroActual.lat.toFixed(5)}, ${coordenadasPasajeroActual.lng.toFixed(5)}`;
             
             const btn = document.getElementById('btn-buscar-moto');
@@ -191,7 +184,7 @@
         }
 
         async function lanzarSolicitudConGPS() {
-            const dest = document.getElementById('solicitud-destino').value.trim() || "Moyobamba Centro";
+            const dest = document.getElementById('solicitud-destino').value.trim() || "Rioja Centro";
             const prec = document.getElementById('solicitud-precio').value;
             viajeIdActual = "viaje_" + usuarioLogueado.id;
 
@@ -285,7 +278,6 @@
 
                         document.getElementById('seccion-negociacion-conductor').classList.remove('hidden');
                         
-                        // 🚀 Abre automáticamente la aplicación nativa de Google Maps en el celular del chofer para iniciar ruta
                         window.open(`https://www.google.com/maps/dir/?api=1&destination=${latCliente},${lngCliente}&travelmode=driving`, '_blank');
 
                         onSnapshot(doc(db, "viajes", viajeIdActual), (ds) => {
