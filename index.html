@@ -255,7 +255,6 @@
                 if(!docSnap.exists()) return;
                 const v = docSnap.data();
                 
-                // Muestra de manera interactiva la foto y detalles del chofer al cliente
                 if(v.conductorNombre) {
                     document.getElementById('perfil-chofer-asignado').classList.remove('hidden');
                     document.getElementById('chat-p-chofer-nombre').innerText = v.conductorNombre;
@@ -390,7 +389,7 @@
             });
         }
 
-        // --- SUB-SISTEMA CHAT MULTI-PERFIL ---
+        // --- SUB-SISTEMA CHAT ---
         async function enviarMensajeChat(rol) {
             const input = document.getElementById(`input-msg-${rol}`);
             if(!input.value.trim()) return;
