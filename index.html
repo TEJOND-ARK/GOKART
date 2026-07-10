@@ -131,8 +131,21 @@
             verificarPerfilYEscuchar();
         }
 
+        // --- RASTREO SATELITAL OPTIMIZADO CON DETECCIÓN DE ESTADO ---
         function obtenerCoordenadasEstiloWhatsApp() {
-            if (!navigator.geolocation) return;
+            if (!navigator.geolocation) {
+                alert("Tu dispositivo móvil no cuenta con hardware GPS compatible.");
+                return;
+            }
+
+            document.getElementById('geo-status-texto').innerText = "⏳ SOLICITANDO PERMISO DE GPS...";
+
+            const opcionesWhatsApp = { 
+                enableHighAccuracy: true, 
+                maximumAge: 0,
+                timeout: 10000 // Si en 10 segundos el hardware del móvil no responde, arroja error de GPS apagado
+            };
+
             geoWatchId = navigator.geolocation.watchPosition(
                 async (pos) => {
                     coordenadasPasajeroActual.lat = pos.coords.latitude;
@@ -144,8 +157,22 @@
                         desbloquearBotonBuscar();
                     }
                 },
-                (error) => {},
-                { enableHighAccuracy: true, maximumAge: 0 }
+                (error) => {
+                    console.error("Error de lectura GPS:", error.message);
+                    const statusTexto = document.getElementById('geo-status-texto');
+                    const statusCoords = document.getElementById('geo-coordenadas');
+                    
+                    if (error.code === 1) {
+                        statusTexto.innerText = "❌ PERMISO DENEGADO";
+                        statusCoords.innerText = "Por favor, dale 'Permitir ubicación' en la barra de Chrome.";
+                        alert("MoyoApp necesita tu ubicación. Habilita el permiso en la parte superior del navegador.");
+                    } else {
+                        statusTexto.innerText = "🛺 POR FAVOR, ENCIENDE TU GPS";
+                        statusCoords.innerText = "Desliza la barra de tu móvil y activa el botón de 'Ubicación'.";
+                        alert("¡Tu antena GPS parece estar desactivada! Desliza tu pantalla hacia abajo y activa la 'Ubicación' o 'GPS' en tu celular para poder pedir tu unidad.");
+                    }
+                },
+                opcionesWhatsApp
             );
         }
 
@@ -267,7 +294,6 @@
 
                         document.getElementById('seccion-negociacion-conductor').classList.remove('hidden');
                         
-                        // 🗺️ MODIFICADO: Abre un marcador directo en las coordenadas exactas enviadas por el satélite del cliente
                         const abrirMaps = confirm("¿Deseas abrir Google Maps para ver la ubicación exacta del pasajero?");
                         if (abrirMaps) {
                             window.open(`https://www.google.com/maps/search/?api=1&query=${latCliente},${lngCliente}`, '_blank');
@@ -312,6 +338,14 @@
         }
         document.getElementById('btn-finalizar').addEventListener('click', concluirViajeMoyo);
 
+        fn-renderizarBurbujasChat(msjs, rol) {
+            let h = ""; if(!msjs) return;
+            msjs.forEach(m => {
+                if(m.remitente==='sistema') h += `<p class="text-[10px] text-center text-slate-400 italic">${m.texto}</p>`;
+                else h += `<p class="p-1.5 rounded-lg text-xs max-w-[85%] ${m.remitente===rol?'bg-amber-300 self-end':'bg-slate-200 self-start'}">${m.texto}</p>`;
+            });
+            const b = document.getElementById(`chat-box-${rol}`); if(b) { b.innerHTML = h; b.scrollTop = b.scrollHeight; }
+        }
         function renderizarBurbujasChat(msjs, rol) {
             let h = ""; if(!msjs) return;
             msjs.forEach(m => {
