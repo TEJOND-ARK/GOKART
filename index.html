@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MoyoApp Premium - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen relative pb-8">
+
+    <header class="bg-amber-400 text-slate-900 font-black text-center py-4 text-lg shadow-md tracking-wide uppercase flex justify-between px-4 items-center">
+        <span>🛺 MoyoApp GPS</span>
+        <button id="btn-logout" class="text-xs bg-slate-900 text-white px-2.5 py-1 rounded-md font-bold">Salir</button>
+    </header>
+
+    <div class="max-w-md mx-auto px-4 mt-4">
+
+        <!-- ================= VISTA PASAJERO ================= -->
+        <div id="view-pasajero-solicitud" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-md space-y-4 text-center">
+                <h3 class="text-sm font-black text-slate-900">👋 ¡Hola, <span id="txt-nombre-cliente" class="text-amber-500"></span>!</h3>
+                
+                <div id="geo-status-box" class="bg-slate-900 text-white p-5 rounded-2xl border border-slate-800 flex flex-col items-center justify-center gap-2">
+                    <div id="geo-icon-loader" class="w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+                    <p id="geo-status-texto" class="text-xs font-black tracking-wide text-amber-300 uppercase">Localizando Satélites...</p>
+                    <p id="geo-coordenadas" class="text-[10px] font-mono text-slate-400">Calculando...</p>
+                </div>
+
+                <div class="space-y-3 text-left">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">🏁 ¿A dónde vas?:</label>
+                        <input type="text" id="solicitud-destino" placeholder="Ej: Plaza de Armas Moyobamba" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">💰 Tu Oferta (S/.):</label>
+                        <input type="number" id="solicitud-precio" value="4" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-amber-600 text-lg">
+                    </div>
+                </div>
+
+                <button id="btn-buscar-moto" disabled class="w-full bg-slate-300 text-slate-500 font-black py-4 rounded-xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition cursor-not-allowed">
+                    Fijando Satélite...
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= CHAT NEGOCIACIÓN PASAJERO ================= -->
+        <div id="view-pasajero-chat" class="hidden bg-white rounded-3xl p-4 border border-slate-200 shadow-md space-y-4">
+            <div class="bg-slate-900 text-white p-3 rounded-xl text-xs">
+                <p class="font-black text-amber-400">Conductor: <span id="chat-p-chofer-nombre">Buscando...</span></p>
+                <p class="text-slate-400">Placa: <span id="chat-p-chofer-placa">Pendiente</span></p>
+            </div>
+            <div class="bg-slate-50 border h-40 overflow-y-auto p-3 rounded-xl flex flex-col gap-2 no-scrollbar" id="chat-box-pasajero"></div>
+            <div class="flex gap-2">
+                <input type="text" id="input-msg-pasajero" placeholder="Responder..." class="flex-1 p-2 bg-slate-50 border rounded-xl text-xs">
+                <button id="btn-send-pasajero" class="bg-amber-400 font-black px-4 rounded-xl text-xs">Enviar</button>
+            </div>
+            <div id="status-viaje-cliente" class="text-center text-xs font-black py-2 bg-emerald-50 text-emerald-700 rounded-xl hidden"></div>
+        </div>
+
+        <!-- ================= VISTA CONDUCTOR: LISTA DE CLIENTES DISPONIBLES ================= -->
+        <div id="view-conductor" class="hidden space-y-3">
+            <div class="bg-white rounded-3xl p-4 border border-slate-200 shadow-md">
+                <div class="flex justify-between items-center border-b pb-2 mb-3">
+                    <h3 class="text-xs font-black">Panel Chofer: <span id="txt-nombre-chofer" class="text-amber-500"></span></h3>
+                </div>
+
+                <h4 class="text-xs font-black text-slate-500 uppercase tracking-wider mb-2">📌 Clientes pidiendo Moto ahora:</h4>
+                <div id="lista-pasajeros-disponibles" class="space-y-3"></div>
+                
+                <div id="no-viajes-msg" class="text-center py-8 text-slate-400 text-xs">
+                    <p>⌛ Esperando que un cliente lance coordenadas...</p>
+                </div>
+
+                <!-- Chat de subasta del lado del Conductor -->
+                <div id="seccion-negociacion-conductor" class="hidden p-4 bg-amber-50 border-2 border-amber-400 rounded-2xl space-y-3 mt-4">
+                    <div class="bg-white border h-36 overflow-y-auto p-3 rounded-xl flex flex-col gap-2 no-scrollbar" id="chat-box-conductor"></div>
+                    <div class="flex gap-2">
+                        <input type="text" id="input-msg-conductor" placeholder="Tu precio..." class="flex-1 p-2 bg-white border rounded-xl text-xs">
+                        <button id="btn-send-conductor" class="bg-amber-400 font-black px-4 rounded-xl text-xs">Ofertar</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="btn-cerrar-trato" class="w-full py-2 bg-emerald-500 text-white font-black rounded-xl text-xs uppercase">Trato Hecho</button>
+                        <button id="btn-finalizar" class="w-full py-2 bg-red-500 text-white font-black rounded-xl text-xs uppercase hidden">Terminar Viaje</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, arrayUnion, collection, query, where, getDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCA3QYw_DheI0wjUtEZMG7qDnwD8CxJGU4",
+            authDomain: "gokar-8945f.firebaseapp.com",
+            projectId: "gokar-8945f",
+            storageBucket: "gokar-8945f.firebasestorage.app",
+            messagingSenderId: "729441003801",
+            appId: "1:729441003801:web:09b1ef86d46821881fbd88"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Control de Sesión entre páginas
+        const sessionData = localStorage.getItem("moyo_user");
+        if (!sessionData) { window.location.href = "login.html"; }
+        
+        const usuarioLogueado = JSON.parse(sessionData);
+        let viajeIdActual = "";
+        let coordenadasPasajeroActual = { lat: null, lng: null };
+
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = "login.html";
+        });
+
+        // Cargar flujos dependiendo del rol guardado
+        if (usuarioLogueado.rol === 'pasajero') {
+            document.getElementById('view-pasajero-solicitud').classList.remove('hidden');
+            document.getElementById('txt-nombre-cliente').innerText = usuarioLogueado.nombre;
+            obtenerCoordenadasNativas();
+        } else {
+            document.getElementById('view-conductor').classList.remove('hidden');
+            document.getElementById('txt-nombre-chofer').innerText = usuarioLogueado.nombre;
+            verificarPerfilYEscuchar();
+        }
+
+        // --- LÓGICA DE PASAJERO ---
+        function obtenerCoordenadasNativas() {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                coordenadasPasajeroActual.lat = pos.coords.latitude;
+                coordenadasPasajeroActual.lng = pos.coords.longitude;
+                document.getElementById('geo-icon-loader').className = "hidden";
+                document.getElementById('geo-status-texto').innerText = "📍 Satélite Fijado Correctamente";
+                document.getElementById('geo-coordenadas').innerText = `${coordenadasPasajeroActual.lat.toFixed(5)}, ${coordenadasPasajeroActual.lng.toFixed(5)}`;
+                
+                const btn = document.getElementById('btn-buscar-moto');
+                btn.disabled = false;
+                btn.className = "w-full bg-amber-400 text-slate-900 font-black py-4 rounded-xl text-xs uppercase shadow-md";
+                btn.innerText = "Buscar Conductores Disponibles";
+            }, null, { enableHighAccuracy: true });
+        }
+
+        async function lanzarSolicitudAutomaticaGPS() {
+            const dest = document.getElementById('solicitud-destino').value.trim() || "Moyobamba Centro";
+            const prec = document.getElementById('solicitud-precio').value;
+            viajeIdActual = "viaje_" + usuarioLogueado.id;
+
+            await setDoc(doc(db, "viajes", viajeIdActual), {
+                id: viajeIdActual,
+                clienteId: usuarioLogueado.id,
+                clienteNombre: usuarioLogueado.nombre,
+                latitudRecojo: coordenadasPasajeroActual.lat,
+                longitudRecojo: coordenadasPasajeroActual.lng,
+                direccionDestino: dest,
+                precioOferta: prec,
+                estado: "BUSCANDO",
+                mensajes: [{ remitente: "sistema", texto: "🤖 Sistema: Coordenadas enviadas a los conductores." }]
+            });
+
+            document.getElementById('view-pasajero-solicitud').classList.add('hidden');
+            document.getElementById('view-pasajero-chat').classList.remove('hidden');
+            escucharViajePasajero();
+        }
+        document.getElementById('btn-buscar-moto').addEventListener('click', lanzarSolicitudAutomaticaGPS);
+
+        function escucharViajePasajero() {
+            onSnapshot(doc(db, "viajes", viajeIdActual), (docSnap) => {
+                if(!docSnap.exists()) return;
+                const v = docSnap.data();
+                if(v.conductorNombre) {
+                    document.getElementById('chat-p-chofer-nombre').innerText = v.conductorNombre;
+                    document.getElementById('chat-p-chofer-placa').innerText = v.conductorPlaca || "M-1022";
+                }
+                renderizarBurbujasChat(v.mensajes, 'pasajero');
+                if (v.estado === "EN_CAMINO") {
+                    const status = document.getElementById('status-viaje-cliente');
+                    status.classList.remove('hidden');
+                    status.innerText = `✅ ¡Trato cerrado! Tu moto viene por S/. ${v.precioOferta}`;
+                }
+                if (v.estado === "FINALIZADO") { alert("Viaje Completado."); localStorage.clear(); location.reload(); }
+            });
+        }
+
+        // --- LÓGICA DE CONDUCTOR (LISTADO DISPONIBLE) ---
+        async function verificarPerfilYEscuchar() {
+            const docRef = doc(db, "conductores", usuarioLogueado.id);
+            let dSnap = await getDoc(docRef);
+            if(!dSnap.exists()) {
+                await setDoc(docRef, { id: usuarioLogueado.id, nombre: usuarioLogueado.nombre, placa: "M-7041", rol: "conductor" });
+            }
+            escucharRutasComoConductor();
+        }
+
+        function escucharRutasComoConductor() {
+            const q = query(collection(db, "viajes"), where("estado", "in", ["BUSCANDO", "NEGOCIANDO", "EN_CAMINO"]));
+            onSnapshot(q, (snap) => {
+                const contenedor = document.getElementById('lista-pasajeros-disponibles');
+                contenedor.innerHTML = "";
+                let encontrados = 0;
+
+                snap.forEach(d => {
+                    const v = d.data();
+                    if(v.estado === "BUSCANDO" || v.conductorId === usuarioLogueado.id) {
+                        encontrados++;
+                        document.getElementById('no-viajes-msg').classList.add('hidden');
+
+                        const card = document.createElement('div');
+                        card.className = "bg-slate-900 text-white p-3 rounded-xl space-y-2 text-xs";
+                        card.innerHTML = `
+                            <div class="flex justify-between font-black text-amber-400">
+                                <span>👤 ${v.clienteNombre}</span>
+                                <span>S/. ${v.precioOferta}</span>
+                            </div>
+                            <p class="text-slate-300">🏁 Destino: ${v.direccionDestino}</p>
+                            <div class="flex gap-2">
+                                <button class="bg-indigo-600 px-2 py-1 rounded text-[10px] uppercase font-bold" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${v.latitudRecojo},${v.longitudRecojo}', '_blank')">🗺️ Ir por GPS</button>
+                                <button class="bg-amber-400 text-slate-900 px-2 py-1 rounded text-[10px] uppercase font-black atender-btn" data-id="${v.id}">💬 Ofertar</button>
+                            </div>
+                        `;
+                        contenedor.appendChild(card);
+                    }
+                });
+
+                if(encontrados === 0) { document.getElementById('no-viajes-msg').classList.remove('hidden'); }
+
+                document.querySelectorAll('.atender-btn').forEach(b => {
+                    b.addEventListener('click', (e) => {
+                        viajeIdActual = e.target.getAttribute('data-id');
+                        document.getElementById('seccion-negociacion-conductor').classList.remove('hidden');
+                        onSnapshot(doc(db, "viajes", viajeIdActual), (ds) => {
+                            if(ds.exists()) {
+                                const data = ds.data();
+                                renderizarBurbujasChat(data.mensajes, 'conductor');
+                                if(data.estado === "EN_CAMINO") {
+                                    document.getElementById('btn-cerrar-trato').classList.add('hidden');
+                                    document.getElementById('btn-finalizar').classList.remove('hidden');
+                                }
+                            }
+                        });
+                    });
+                });
+            });
+        }
+
+        // --- CHAT COMPARTIDO ---
+        async function enviarMensajeChat(rol) {
+            const input = document.getElementById(`input-msg-${rol}`);
+            if(!input.value.trim()) return;
+            const p = { mensajes: arrayUnion({ remitente: rol, texto: input.value.trim() }), estado: "NEGOCIANDO" };
+            if(rol==='conductor') { p.conductorId = usuarioLogueado.id; p.conductorNombre = usuarioLogueado.nombre; p.conductorPlaca="M-7041"; }
+            await updateDoc(doc(db, "viajes", viajeIdActual), p);
+            input.value = "";
+        }
+        document.getElementById('btn-send-pasajero').addEventListener('click', () => enviarMensajeChat('pasajero'));
+        document.getElementById('btn-send-conductor').addEventListener('click', () => enviarMensajeChat('conductor'));
+
+        async function pactarTarifaTrato() {
+            const p = prompt("Precio final pactado (S/.):"); if(!p) return;
+            await updateDoc(doc(db, "viajes", viajeIdActual), { estado: "EN_CAMINO", precioOferta: p, conductorId: usuarioLogueado.id, conductorNombre: usuarioLogueado.nombre, conductorPlaca: "M-7041" });
+        }
+        document.getElementById('btn-cerrar-trato').addEventListener('click', pactarTarifaTrato);
+
+        async function concluirViajeMoyo() {
+            await updateDoc(doc(db, "viajes", viajeIdActual), { estado: "FINALIZADO" });
+            localStorage.clear(); location.reload();
+        }
+        document.getElementById('btn-finalizar').addEventListener('click', concluirViajeMoyo);
+
+        function renderizarBurbujasChat(msjs, rol) {
+            let h = ""; if(!msjs) return;
+            msjs.forEach(m => {
+                if(m.remitente==='sistema') h += `<p class="text-[10px] text-center text-slate-400 italic">${m.texto}</p>`;
+                else h += `<p class="p-1.5 rounded-lg text-xs max-w-[85%] ${m.remitente===rol?'bg-amber-300 self-end':'bg-slate-200 self-start'}">${m.texto}</p>`;
+            });
+            const b = document.getElementById(`chat-box-${rol}`); if(b) { b.innerHTML = h; b.scrollTop = b.scrollHeight; }
+        }
+    </script>
+</body>
+</html>
