@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MoyoApp Premium - Dashboard</title>
+    <title>MoyoApp Premium - GPS WhatsApp Style</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -26,10 +26,11 @@
             <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-md space-y-4 text-center">
                 <h3 class="text-sm font-black text-slate-900">👋 ¡Hola, <span id="txt-nombre-cliente" class="text-amber-500"></span>!</h3>
                 
+                <!-- Caja de Estado de Satélites Estilo WhatsApp -->
                 <div id="geo-status-box" class="bg-slate-900 text-white p-5 rounded-2xl border border-slate-800 flex flex-col items-center justify-center gap-2">
                     <div id="geo-icon-loader" class="w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
-                    <p id="geo-status-texto" class="text-xs font-black tracking-wide text-amber-300 uppercase">Solicitando satélites GPS...</p>
-                    <p id="geo-coordenadas" class="text-[10px] font-mono text-slate-400">Esperando confirmación del celular...</p>
+                    <p id="geo-status-texto" class="text-xs font-black tracking-wide text-amber-300 uppercase">Buscando señal GPS en tiempo real...</p>
+                    <p id="geo-coordenadas" class="text-[10px] font-mono text-slate-400">Acepta el permiso en tu pantalla...</p>
                 </div>
 
                 <div class="space-y-3 text-left">
@@ -44,7 +45,7 @@
                 </div>
 
                 <button id="btn-buscar-moto" disabled class="w-full bg-slate-300 text-slate-500 font-black py-4 rounded-xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition cursor-not-allowed">
-                    Fijando Satélite...
+                    Esperando GPS Fiel...
                 </button>
             </div>
         </div>
@@ -63,7 +64,7 @@
             <div id="status-viaje-cliente" class="text-center text-xs font-black py-2 bg-emerald-50 text-emerald-700 rounded-xl hidden"></div>
         </div>
 
-        <!-- ================= VISTA CONDUCTOR: LISTA DE CLIENTES DISPONIBLES ================= -->
+        <!-- ================= VISTA CONDUCTOR ================= -->
         <div id="view-conductor" class="hidden space-y-3">
             <div class="bg-white rounded-3xl p-4 border border-slate-200 shadow-md">
                 <div class="flex justify-between items-center border-b pb-2 mb-3">
@@ -116,8 +117,10 @@
         const usuarioLogueado = JSON.parse(sessionData);
         let viajeIdActual = "";
         let coordenadasPasajeroActual = { lat: null, lng: null };
+        let geoWatchId = null; // Guardará el ID de rastreo continuo activo
 
         document.getElementById('btn-logout').addEventListener('click', () => {
+            if(geoWatchId) navigator.geolocation.clearWatch(geoWatchId);
             localStorage.clear();
             window.location.href = "login.html";
         });
@@ -125,46 +128,55 @@
         if (usuarioLogueado.rol === 'pasajero') {
             document.getElementById('view-pasajero-solicitud').classList.remove('hidden');
             document.getElementById('txt-nombre-cliente').innerText = usuarioLogueado.nombre;
-            obtenerCoordenadasNativas();
+            obtenerCoordenadasEstiloWhatsApp();
         } else {
             document.getElementById('view-conductor').classList.remove('hidden');
             document.getElementById('txt-nombre-chofer').innerText = usuarioLogueado.nombre;
             verificarPerfilYEscuchar();
         }
 
-        // --- LÓGICA DE GEOLOCALIZACIÓN REFORZADA ---
-        function obtenerCoordenadasNativas() {
+        // --- SISTEMA DE SEGUIMIENTO GPS CONTINUO (ESTILO WHATSAPP REAL-TIME) ---
+        function obtenerCoordenadasEstiloWhatsApp() {
             if (!navigator.geolocation) {
-                alert("Tu dispositivo o navegador no soporta geolocalización.");
+                alert("Tu dispositivo móvil no cuenta con hardware GPS compatible.");
                 usarUbicacionManual();
                 return;
             }
 
-            const opcionesGps = { 
-                enableHighAccuracy: true, 
-                timeout: 10000, 
-                maximumAge: 0 
+            // Forzamos al procesador del celular a encender las antenas a máxima potencia
+            const opcionesWhatsApp = { 
+                enableHighAccuracy: true, // Forzar GPS Satelital (Alta precisión)
+                timeout: 6000,            // Espera estricta de 6 segundos
+                maximumAge: 0             // No usar ubicaciones guardadas viejas
             };
 
-            navigator.geolocation.getCurrentPosition(
+            // watchPosition mantiene la conexión viva con los satélites en tiempo real
+            geoWatchId = navigator.geolocation.watchPosition(
                 (pos) => {
                     coordenadasPasajeroActual.lat = pos.coords.latitude;
                     coordenadasPasajeroActual.lng = pos.coords.longitude;
-                    desbloquearBotonBuscar("📍 Satélite Fijado Correctamente");
+                    
+                    // Si ya capturó la coordenada real, detenemos el rastreo para cuidar batería y liberamos la UI
+                    if(coordenadasPasajeroActual.lat && coordenadasPasajeroActual.lng) {
+                        navigator.geolocation.clearWatch(geoWatchId);
+                        desbloquearBotonBuscar("📍 GPS Conectado (Precisión Satelital)");
+                    }
                 },
                 (error) => {
-                    console.warn("GPS bloqueado o lento. Iniciando Plan B manual.", error.message);
-                    alert("Por favor, asegúrate de dar permiso de Ubicación (GPS) en la barra de tu navegador. Usando punto de inicio central.");
+                    console.warn("Buscando satélites alternativos o reintentando permisos...", error.message);
+                    // Si el usuario deniega el permiso o el GPS está apagado, salta el Plan B automático
+                    navigator.geolocation.clearWatch(geoWatchId);
                     usarUbicacionManual();
                 },
-                opcionesGps
+                opcionesWhatsApp
             );
         }
 
         function usarUbicacionManual() {
-            coordenadasPasajeroActual.lat = -6.0335; // Moyobamba Central
+            // Coordenadas céntricas de Moyobamba por si falla el GPS de fábrica del celular
+            coordenadasPasajeroActual.lat = -6.0335; 
             coordenadasPasajeroActual.lng = -76.9717; 
-            desbloquearBotonBuscar("📍 Ubicación Inicial (Moyobamba)");
+            desbloquearBotonBuscar("📍 Ubicación Estimada (Moyobamba Centro)");
         }
 
         function desbloquearBotonBuscar(textoEstado) {
@@ -178,7 +190,7 @@
             btn.innerText = "Buscar Conductores Disponibles";
         }
 
-        async function lanzarSolicitudAutomaticaGPS() {
+        async function lanzarSolicitudConGPS() {
             const dest = document.getElementById('solicitud-destino').value.trim() || "Moyobamba Centro";
             const prec = document.getElementById('solicitud-precio').value;
             viajeIdActual = "viaje_" + usuarioLogueado.id;
@@ -192,14 +204,14 @@
                 direccionDestino: dest,
                 precioOferta: prec,
                 estado: "BUSCANDO",
-                mensajes: [{ remitente: "sistema", texto: "🤖 Sistema: Coordenadas fijadas en el mapa." }]
+                mensajes: [{ remitente: "sistema", texto: "🤖 Sistema: Coordenadas de recojo enviadas por satélite." }]
             });
 
             document.getElementById('view-pasajero-solicitud').classList.add('hidden');
             document.getElementById('view-pasajero-chat').classList.remove('hidden');
             escucharViajePasajero();
         }
-        document.getElementById('btn-buscar-moto').addEventListener('click', lanzarSolicitudAutomaticaGPS);
+        document.getElementById('btn-buscar-moto').addEventListener('click', lanzarSolicitudConGPS);
 
         function escucharViajePasajero() {
             onSnapshot(doc(db, "viajes", viajeIdActual), (docSnap) => {
@@ -215,11 +227,11 @@
                     status.classList.remove('hidden');
                     status.innerText = `✅ ¡Trato cerrado! Tu moto viene por S/. ${v.precioOferta}`;
                 }
-                if (v.estado === "FINALIZADO") { alert("Viaje Completado."); localStorage.clear(); location.reload(); }
+                if (v.estado === "FINALIZADO") { alert("Viaje Completado con éxito."); localStorage.clear(); location.reload(); }
             });
         }
 
-        // --- LÓGICA DE CONDUCTOR ---
+        // --- LÓGICA DE CONDUCTOR CON APERTURA DE MAPA AUTOMÁTICA ---
         async function verificarPerfilYEscuchar() {
             const docRef = doc(db, "conductores", usuarioLogueado.id);
             let dSnap = await getDoc(docRef);
@@ -273,7 +285,7 @@
 
                         document.getElementById('seccion-negociacion-conductor').classList.remove('hidden');
                         
-                        // 🚀 Abre automáticamente la aplicación nativa de Google Maps en el celular del chofer
+                        // 🚀 Abre automáticamente la aplicación nativa de Google Maps en el celular del chofer para iniciar ruta
                         window.open(`https://www.google.com/maps/dir/?api=1&destination=${latCliente},${lngCliente}&travelmode=driving`, '_blank');
 
                         onSnapshot(doc(db, "viajes", viajeIdActual), (ds) => {
