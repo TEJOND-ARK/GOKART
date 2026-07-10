@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MoyoApp Premium - Ingreso</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-md bg-white rounded-3xl p-6 border border-slate-200 shadow-xl space-y-5">
+        <div class="text-center space-y-2">
+            <div class="bg-amber-400 text-slate-900 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto shadow-md">
+                <i data-lucide="bike" class="w-10 h-10"></i>
+            </div>
+            <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight">MoyoApp Login</h2>
+            <p class="text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full inline-block">📍 Moyobamba, San Martín</p>
+        </div>
+        
+        <div class="space-y-3">
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Ingresar como:</label>
+                <select id="login-rol" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium">
+                    <option value="pasajero">Pasajero (Cliente)</option>
+                    <option value="conductor">Conductor (Mototaxista)</option>
+                </select>
+            </div>
+
+            <!-- Sección Pasajeros -->
+            <div id="seccion-pasajero" class="block">
+                <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Tu Nombre Completo:</label>
+                <input type="text" id="login-nombre" value="Carlos Mendoza" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium">
+            </div>
+            
+            <!-- Sección Conductores -->
+            <div id="seccion-privada" class="hidden space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Correo del Conductor:</label>
+                    <input type="email" id="login-usuario" placeholder="ejemplo@moyo.com" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Contraseña:</label>
+                    <input type="password" id="login-password" placeholder="••••••••" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium">
+                </div>
+            </div>
+
+            <button id="btn-login-trigger" class="w-full bg-amber-400 hover:bg-amber-500 text-slate-900 font-black py-3.5 rounded-xl text-sm uppercase tracking-wider transition transform active:scale-95 shadow-md">
+                Ingresar a la App
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCA3QYw_DheI0wjUtEZMG7qDnwD8CxJGU4",
+            authDomain: "gokar-8945f.firebaseapp.com",
+            projectId: "gokar-8945f",
+            storageBucket: "gokar-8945f.firebasestorage.app",
+            messagingSenderId: "729441003801",
+            appId: "1:729441003801:web:09b1ef86d46821881fbd88"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        try { lucide.createIcons(); } catch(e){}
+
+        document.getElementById('login-rol').addEventListener('change', () => {
+            const rol = document.getElementById('login-rol').value;
+            document.getElementById('seccion-pasajero').classList.toggle('hidden', rol !== 'pasajero');
+            document.getElementById('seccion-privada').classList.toggle('hidden', rol === 'pasajero');
+        });
+
+        document.getElementById('btn-login-trigger').addEventListener('click', async () => {
+            const rol = document.getElementById('login-rol').value;
+
+            if (rol === 'pasajero') {
+                const nombre = document.getElementById('login-nombre').value.trim();
+                if(!nombre) return alert("Escribe tu nombre");
+                
+                localStorage.setItem("moyo_user", JSON.stringify({ id: "p_" + Date.now(), nombre, rol: "pasajero" }));
+                window.location.href = "index.html";
+            } else {
+                const email = document.getElementById('login-usuario').value.trim();
+                const pass = document.getElementById('login-password').value;
+
+                if(!email || !pass) return alert("Completa los datos");
+
+                try {
+                    const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+                    localStorage.setItem("moyo_user", JSON.stringify({ 
+                        id: userCredential.user.uid, 
+                        nombre: email.split('@')[0], 
+                        rol: "conductor",
+                        email: email
+                    }));
+                    window.location.href = "index.html";
+                } catch (error) {
+                    alert("Error: Usuario o contraseña incorrectos.");
+                }
+            }
+        });
+    </script>
+</body>
+</html>
