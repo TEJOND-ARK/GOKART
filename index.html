@@ -131,8 +131,12 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-500 mb-1">📸 FOTO DEL VEHÍCULO (URL):</label>
-                    <input type="text" id="reg-chofer-foto" placeholder="https://enlace-de-tu-foto.com/imagen.jpg" class="w-full p-2.5 bg-slate-50 border rounded-xl text-slate-600 text-[11px]">
+                    <label class="block font-bold text-slate-500 mb-1">📸 SELECCIONAR FOTO DEL VEHÍCULO:</label>
+                    <input type="file" id="reg-chofer-foto-file" accept="image/*" class="w-full p-2 bg-slate-100 border border-dashed border-slate-300 rounded-xl font-medium text-[11px] text-slate-600 file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-amber-400 file:text-slate-900 cursor-pointer">
+                    <!-- Previsualización opcional de la imagen local cargada -->
+                    <div class="mt-2 flex justify-center">
+                        <img id="img-preview-vehiculo" class="h-20 w-auto rounded-lg object-cover hidden border" />
+                    </div>
                 </div>
                 <button id="btn-guardar-perfil-chofer" class="w-full bg-emerald-500 text-white font-black py-3 rounded-xl uppercase tracking-wider shadow-md">
                     Guardar Perfil y Activar Turno
@@ -176,7 +180,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot, updateDoc, arrayUnion, collection, query, where, getDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
-        // IMPORTAMOS LOS MÓDULOS DE AUTENTICACIÓN
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -198,11 +201,11 @@
         let ciudadDetectadaActual = "Tu Ubicación";
         let datosVehiculoChofer = null;
         let usuarioLogueado = null;
+        let base64FotoVehiculo = ""; // Variable temporal para guardar la foto local
 
-        // --- MANEJO DEL ESTADO DE AUTENTICACIÓN REAL ---
+        // --- MANEJO DEL ESTADO DE AUTENTICACIÓN ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Si está autenticado en Firebase, buscamos su rol y nombre en Firestore
                 const docRef = doc(db, "usuarios", user.uid);
                 const docSnap = await getDoc(docRef);
                 
@@ -212,12 +215,10 @@
                     document.getElementById('app-header').classList.remove('hidden');
                     inicializarAppSegunRol();
                 } else {
-                    // Fallback si por alguna razón no se guardaron los datos en Firestore
                     alert("Error al recuperar los datos del perfil.");
                     await signOut(auth);
                 }
             } else {
-                // Si no hay sesión activa
                 usuarioLogueado = null;
                 document.getElementById('view-login').classList.remove('hidden');
                 document.getElementById('app-header').classList.add('hidden');
@@ -228,7 +229,7 @@
             }
         });
 
-        // BOTÓN INGRESAR / REGISTRARSE
+        // INGRESAR / REGISTRARSE
         document.getElementById('btn-ingresar-app').addEventListener('click', async () => {
             const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value.trim();
@@ -238,10 +239,8 @@
             if(!email || !password) { alert("Completa el correo y la contraseña."); return; }
 
             try {
-                // Intenta iniciar sesión primero
                 await signInWithEmailAndPassword(auth, email, password);
             } catch (error) {
-                // Si el usuario no existe, lo crea automáticamente
                 if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
                     if(!nombre) { 
                         alert("Usuario no registrado. Si eres nuevo, ingresa tu Nombre Completo para registrarte."); 
@@ -249,7 +248,6 @@
                     }
                     try {
                         const resultado = await createUserWithEmailAndPassword(auth, email, password);
-                        // Guarda la información del rol del usuario en la base de datos Firestore
                         await setDoc(doc(db, "usuarios", resultado.user.uid), {
                             id: resultado.user.uid,
                             nombre: nombre,
@@ -265,7 +263,7 @@
             }
         });
 
-        // BOTÓN SALIR
+        // SALIR
         document.getElementById('btn-logout').addEventListener('click', async () => {
             if(geoWatchId) navigator.geolocation.clearWatch(geoWatchId);
             await signOut(auth);
@@ -283,6 +281,82 @@
                 document.getElementById('txt-nombre-chofer').innerText = usuarioLogueado.nombre;
                 comprobarPerfilVehiculo();
             }
+        }
+
+        // --- PROCESADOR DE IMAGEN LOCAL A BASE64 ---
+        document.getElementById('reg-chofer-foto-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                // Imagen convertida en texto string listo para Firestore
+                base64FotoVehiculo = event.target.result;
+                
+                // Mostrar previsualización local en la pantalla de registro
+                const preview = document.getElementById('img-preview-vehiculo');
+                preview.src = base64FotoVehiculo;
+                preview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // --- GESTIÓN DE PERFIL DEL CONDUCTOR ---
+        async function comprobarPerfilVehiculo() {
+            const docRef = doc(db, "conductores", usuarioLogueado.id);
+            let dSnap = await getDoc(docRef);
+            
+            if(dSnap.exists() && dSnap.data().placa) {
+                datosVehiculoChofer = dSnap.data();
+                activarPanelTrabajoChofer();
+            } else {
+                abrirFormularioRegistroVehiculo();
+            }
+        }
+
+        function abrirFormularioRegistroVehiculo() {
+            document.getElementById('view-conductor').classList.add('hidden');
+            document.getElementById('view-conductor-registro').classList.remove('hidden');
+            
+            // Si ya hay una foto previa guardada en memoria, la precarga
+            if(datosVehiculoChofer && datosVehiculoChofer.foto) {
+                const preview = document.getElementById('img-preview-vehiculo');
+                preview.src = datosVehiculoChofer.foto;
+                preview.classList.remove('hidden');
+                base64FotoVehiculo = datosVehiculoChofer.foto;
+            }
+        }
+
+        document.getElementById('btn-guardar-perfil-chofer').addEventListener('click', async () => {
+            const tipo = document.getElementById('reg-chofer-tipo').value;
+            const placa = document.getElementById('reg-chofer-placa').value.trim();
+            const edad = document.getElementById('reg-chofer-edad').value.trim();
+
+            if(!placa || !edad) { alert("Completa la placa y edad"); return; }
+            if(!base64FotoVehiculo) { alert("Por favor, selecciona o captura una foto local de tu vehículo."); return; }
+
+            const datos = {
+                id: usuarioLogueado.id,
+                nombre: usuarioLogueado.nombre,
+                vehiculoTipo: tipo,
+                placa: placa,
+                edad: edad,
+                foto: base64FotoVehiculo, // Guarda el archivo local convertido
+                rol: "conductor"
+            };
+
+            await setDoc(doc(db, "conductores", usuarioLogueado.id), datos);
+            datosVehiculoChofer = datos;
+            
+            document.getElementById('view-conductor-registro').classList.add('hidden');
+            activarPanelTrabajoChofer();
+        });
+
+        document.getElementById('btn-editar-perfil').addEventListener('click', abrirFormularioRegistroVehiculo);
+
+        function activarPanelTrabajoChofer() {
+            document.getElementById('view-conductor').classList.remove('hidden');
+            escucharRutasComoConductor();
         }
 
         // --- SISTEMA GPS PASAJERO ---
@@ -379,56 +453,6 @@
                 }
                 if (v.estado === "FINALIZADO") { alert("Servicio completado exitosamente."); location.reload(); }
             });
-        }
-
-        // --- GESTIÓN DE PERFIL DEL CONDUCTOR ---
-        async function comprobarPerfilVehiculo() {
-            const docRef = doc(db, "conductores", usuarioLogueado.id);
-            let dSnap = await getDoc(docRef);
-            
-            if(dSnap.exists() && dSnap.data().placa) {
-                datosVehiculoChofer = dSnap.data();
-                activarPanelTrabajoChofer();
-            } else {
-                abrirFormularioRegistroVehiculo();
-            }
-        }
-
-        function abrirFormularioRegistroVehiculo() {
-            document.getElementById('view-conductor').classList.add('hidden');
-            document.getElementById('view-conductor-registro').classList.remove('hidden');
-        }
-
-        document.getElementById('btn-guardar-perfil-chofer').addEventListener('click', async () => {
-            const tipo = document.getElementById('reg-chofer-tipo').value;
-            const placa = document.getElementById('reg-chofer-placa').value.trim();
-            const edad = document.getElementById('reg-chofer-edad').value.trim();
-            const foto = document.getElementById('reg-chofer-foto').value.trim();
-
-            if(!placa || !edad) { alert("Completa la placa y edad"); return; }
-
-            const datos = {
-                id: usuarioLogueado.id,
-                nombre: usuarioLogueado.nombre,
-                vehiculoTipo: tipo,
-                placa: placa,
-                edad: edad,
-                foto: foto || "https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?w=150",
-                rol: "conductor"
-            };
-
-            await setDoc(doc(db, "conductores", usuarioLogueado.id), datos);
-            datosVehiculoChofer = datos;
-            
-            document.getElementById('view-conductor-registro').classList.add('hidden');
-            activarPanelTrabajoChofer();
-        });
-
-        document.getElementById('btn-editar-perfil').addEventListener('click', abrirFormularioRegistroVehiculo);
-
-        function activarPanelTrabajoChofer() {
-            document.getElementById('view-conductor').classList.remove('hidden');
-            escucharRutasComoConductor();
         }
 
         function escucharRutasComoConductor() {
