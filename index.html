@@ -9,12 +9,39 @@
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen relative pb-8">
 
     <!-- Barra de Navegación Dinámica -->
-    <header class="bg-amber-400 text-slate-900 font-black text-center py-4 text-lg shadow-md tracking-wide uppercase flex justify-between px-4 items-center">
+    <header id="app-header" class="bg-amber-400 text-slate-900 font-black text-center py-4 text-lg shadow-md tracking-wide uppercase flex justify-between px-4 items-center hidden">
         <span id="app-dinamica-titulo">🛺 MOYOAPP</span>
         <button id="btn-logout" class="text-xs bg-slate-900 text-white px-2.5 py-1 rounded-md font-bold">Salir</button>
     </header>
 
     <div class="max-w-md mx-auto px-4 mt-4">
+
+        <!-- ================= PANTALLA DE LOGIN INTEGRADA ================= -->
+        <div id="view-login" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-xl space-y-6 text-center mt-8">
+            <div class="space-y-2">
+                <h1 class="text-3xl font-black tracking-tight text-slate-900">🛺 MOYOAPP</h1>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Viajes Locales & Mudanzas</p>
+            </div>
+
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="block text-xs font-black text-slate-500 mb-1 uppercase">Tu Nombre Completo:</label>
+                    <input type="text" id="login-nombre" placeholder="Ej: Juan Pérez" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:outline-amber-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-black text-slate-500 mb-1 uppercase">¿Cómo deseas ingresar?:</label>
+                    <select id="login-rol" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-amber-400">
+                        <option value="pasajero">👤 Ingresar como Cliente (Pedir Viaje / Mudanza)</option>
+                        <option value="conductor">🛺 Ingresar como Chofer (Ofrecer Servicio)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="btn-ingresar-app" class="w-full bg-amber-400 hover:bg-amber-500 text-slate-900 font-black py-4 rounded-xl text-sm uppercase tracking-widest shadow-md transition active:scale-95">
+                Ingresar al Sistema
+            </button>
+        </div>
+
 
         <!-- ================= VISTA PASAJERO ================= -->
         <div id="view-pasajero-solicitud" class="hidden space-y-4">
@@ -52,6 +79,7 @@
             </div>
         </div>
 
+
         <!-- ================= CHAT NEGOCIACIÓN PASAJERO ================= -->
         <div id="view-pasajero-chat" class="hidden bg-white rounded-3xl p-4 border border-slate-200 shadow-md space-y-4">
             <!-- FOTO Y DETALLES DEL CHOFER ASIGNADO (DINÁMICO) -->
@@ -71,6 +99,7 @@
             </div>
             <div id="status-viaje-cliente" class="text-center text-xs font-black py-2 bg-emerald-50 text-emerald-700 rounded-xl hidden"></div>
         </div>
+
 
         <!-- ================= VISTA PANEL REGISTRO CONDUCTOR ================= -->
         <div id="view-conductor-registro" class="hidden bg-white rounded-3xl p-5 border border-slate-200 shadow-md space-y-4">
@@ -98,13 +127,13 @@
                 <div>
                     <label class="block font-bold text-slate-500 mb-1">📸 LINK / URL DE LA FOTO DEL VEHÍCULO:</label>
                     <input type="text" id="reg-chofer-foto" placeholder="https://enlace-de-tu-foto.com/imagen.jpg" class="w-full p-2.5 bg-slate-50 border rounded-xl text-slate-600 text-[11px]">
-                    <p class="text-[10px] text-slate-400 mt-1">Pega el enlace de la imagen de tu vehículo.</p>
                 </div>
                 <button id="btn-guardar-perfil-chofer" class="w-full bg-emerald-500 text-white font-black py-3 rounded-xl uppercase tracking-wider shadow-md">
                     Guardar Perfil y Activar Turno
                 </button>
             </div>
         </div>
+
 
         <!-- ================= VISTA CONDUCTOR (PANEL TRABAJO) ================= -->
         <div id="view-conductor" class="hidden space-y-3">
@@ -154,44 +183,71 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- SISTEMA COMPLETO DE CONTROL DE SESIÓN SEGURO ---
-        let sessionData = localStorage.getItem("moyo_user");
-        if (!sessionData) { 
-            console.log("No se detectó sesión. Creando usuario pasajero de prueba temporal...");
-            const usuarioPrueba = { id: "user_" + Date.now(), nombre: "Pasajero de Prueba", rol: "pasajero" };
-            localStorage.setItem("moyo_user", JSON.stringify(usuarioPrueba));
-            sessionData = localStorage.getItem("moyo_user");
-        }
-        
-        const usuarioLogueado = JSON.parse(sessionData);
         let viajeIdActual = "";
         let coordenadasPasajeroActual = { lat: null, lng: null };
         let geoWatchId = null;
         let ciudadDetectadaActual = "Tu Ubicación";
         let datosVehiculoChofer = null;
+        let usuarioLogueado = null;
+
+        // --- MANEJO DEL LOGIN INTERNO ---
+        function verificarSesionInicial() {
+            const sessionData = localStorage.getItem("moyo_user");
+            if (sessionData) {
+                usuarioLogueado = JSON.parse(sessionData);
+                document.getElementById('view-login').classList.add('hidden');
+                document.getElementById('app-header').classList.remove('hidden');
+                inicializarAppSegunRol();
+            } else {
+                // Si no hay sesión, se fuerza la vista del login integrado
+                document.getElementById('view-login').classList.remove('hidden');
+                document.getElementById('app-header').classList.add('hidden');
+                document.getElementById('view-pasajero-solicitud').classList.add('hidden');
+                document.getElementById('view-conductor').classList.add('hidden');
+                document.getElementById('view-conductor-registro').classList.add('hidden');
+            }
+        }
+
+        document.getElementById('btn-ingresar-app').addEventListener('click', () => {
+            const nombre = document.getElementById('login-nombre').value.trim();
+            const rol = document.getElementById('login-rol').value;
+
+            if(!nombre) { alert("Por favor, ingresa tu nombre."); return; }
+
+            usuarioLogueado = {
+                id: "user_" + Date.now(),
+                nombre: nombre,
+                rol: rol
+            };
+
+            localStorage.setItem("moyo_user", JSON.stringify(usuarioLogueado));
+            verificarSesionInicial();
+        });
 
         document.getElementById('btn-logout').addEventListener('click', () => {
             if(geoWatchId) navigator.geolocation.clearWatch(geoWatchId);
-            localStorage.clear();
-            location.reload(); 
+            localStorage.removeItem("moyo_user");
+            usuarioLogueado = null;
+            verificarSesionInicial();
         });
 
-        // Inicializar interfaces según rol
-        if (usuarioLogueado.rol === 'pasajero') {
-            document.getElementById('view-pasajero-solicitud').classList.remove('hidden');
-            document.getElementById('txt-nombre-cliente').innerText = usuarioLogueado.nombre;
-            obtenerCoordenadasEstiloWhatsApp();
-        } else {
-            document.getElementById('txt-nombre-chofer').innerText = usuarioLogueado.nombre;
-            comprobarPerfilVehiculo();
+        function inicializarAppSegunRol() {
+            if (usuarioLogueado.rol === 'pasajero') {
+                document.getElementById('view-pasajero-solicitud').classList.remove('hidden');
+                document.getElementById('view-conductor').classList.add('hidden');
+                document.getElementById('view-conductor-registro').classList.add('hidden');
+                document.getElementById('txt-nombre-cliente').innerText = usuarioLogueado.nombre;
+                obtenerCoordenadasEstiloWhatsApp();
+            } else {
+                document.getElementById('view-pasajero-solicitud').classList.add('hidden');
+                document.getElementById('txt-nombre-chofer').innerText = usuarioLogueado.nombre;
+                comprobarPerfilVehiculo();
+            }
         }
 
         // --- SISTEMA GPS PASAJERO ---
         function obtenerCoordenadasEstiloWhatsApp() {
-            if (!navigator.geolocation) {
-                document.getElementById('geo-status-texto').innerText = "❌ GPS NO COMPATIBLE";
-                return;
-            }
+            if (!navigator.geolocation) return;
             document.getElementById('geo-status-texto').innerText = "⏳ SOLICITANDO PERMISO DE GPS...";
 
             navigator.geolocation.watchPosition(
@@ -433,9 +489,9 @@
                 precioOferta: p, 
                 conductorId: usuarioLogueado.id, 
                 conductorNombre: usuarioLogueado.nombre, 
-                conductorPlaca: datosVehiculoChofer.placa,
-                conductorVehiculoTipo: datosVehiculoChofer.vehiculoTipo,
-                conductorFoto: datosVehiculoChofer.foto
+                conductorPlaca = datosVehiculoChofer.placa,
+                conductorVehiculoTipo = datosVehiculoChofer.vehiculoTipo,
+                conductorFoto = datosVehiculoChofer.foto
             });
         }
         document.getElementById('btn-cerrar-trato').addEventListener('click', pactarTarifaTrato);
@@ -454,6 +510,9 @@
             });
             const b = document.getElementById(`chat-box-${rol}`); if(b) { b.innerHTML = h; b.scrollTop = b.scrollHeight; }
         }
+
+        // Ejecutar verificación al cargar
+        verificarSesionInicial();
     </script>
 </body>
 </html>
