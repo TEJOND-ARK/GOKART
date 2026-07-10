@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MoyoApp - Multiservicios y Mudanzas</title>
+    <title>MoyoApp - GPS e Interfaz Dinámica</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen relative pb-8">
 
     <!-- Barra de Navegación Dinámica -->
     <header class="bg-amber-400 text-slate-900 font-black text-center py-4 text-lg shadow-md tracking-wide uppercase flex justify-between px-4 items-center">
-        <span id="app-dinamica-titulo">🛺 MOYOAPP</span>
+        <span id="app-dinamica-titulo">🛺 MOYOAPP PASAJERO</span>
         <button id="btn-logout" class="text-xs bg-slate-900 text-white px-2.5 py-1 rounded-md font-bold">Salir</button>
     </header>
 
@@ -30,18 +30,11 @@
 
                 <div class="space-y-3 text-left">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">📦 Tipo de Servicio:</label>
-                        <select id="solicitud-tipo-servicio" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700">
-                            <option value="Pasajero (Motocar)">🛺 Pasajero Local (Motocar)</option>
-                            <option value="Mudanza / Carga">📦 Servicio de Mudanza (Carguero/Carro)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">🏁 ¿A dónde vas / Destino Mudanza?:</label>
+                        <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">🏁 ¿A dónde vas?:</label>
                         <input type="text" id="solicitud-destino" placeholder="Calculando ubicación..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">💰 Tu Oferta Inicial (S/.):</label>
+                        <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">💰 Tu Oferta (S/.):</label>
                         <input type="number" id="solicitud-precio" value="4" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-amber-600 text-lg">
                     </div>
                 </div>
@@ -54,16 +47,10 @@
 
         <!-- ================= CHAT NEGOCIACIÓN PASAJERO ================= -->
         <div id="view-pasajero-chat" class="hidden bg-white rounded-3xl p-4 border border-slate-200 shadow-md space-y-4">
-            <!-- FOTO Y DETALLES DEL CHOFER ASIGNADO (DINÁMICO) -->
-            <div id="perfil-chofer-asignado" class="bg-slate-900 text-white p-4 rounded-2xl text-xs flex gap-3 items-center hidden">
-                <img id="chat-p-chofer-foto" src="" class="w-16 h-16 object-cover rounded-xl border border-amber-400 bg-slate-800" alt="Vehículo">
-                <div class="flex-1 space-y-1">
-                    <p class="font-black text-amber-400 text-sm"><span id="chat-p-chofer-nombre">Chofer</span></p>
-                    <p class="text-slate-300 font-medium">📋 Unidad: <span id="chat-p-chofer-tipo" class="text-white"></span></p>
-                    <p class="text-slate-300 font-medium">🪪 Placa: <span id="chat-p-chofer-placa" class="text-white"></span> | Edad: <span id="chat-p-chofer-edad" class="text-white"></span> años</p>
-                </div>
+            <div class="bg-slate-900 text-white p-3 rounded-xl text-xs">
+                <p class="font-black text-amber-400">Conductor: <span id="chat-p-chofer-nombre">Buscando...</span></p>
+                <p class="text-slate-400">Placa: <span id="chat-p-chofer-placa">Pendiente</span></p>
             </div>
-
             <div class="bg-slate-50 border h-40 overflow-y-auto p-3 rounded-xl flex flex-col gap-2" id="chat-box-pasajero"></div>
             <div class="flex gap-2">
                 <input type="text" id="input-msg-pasajero" placeholder="Responder..." class="flex-1 p-2 bg-slate-50 border rounded-xl text-xs">
@@ -72,53 +59,18 @@
             <div id="status-viaje-cliente" class="text-center text-xs font-black py-2 bg-emerald-50 text-emerald-700 rounded-xl hidden"></div>
         </div>
 
-        <!-- ================= VISTA PANEL REGISTRO CONDUCTOR ================= -->
-        <div id="view-conductor-registro" class="hidden bg-white rounded-3xl p-5 border border-slate-200 shadow-md space-y-4">
-            <h3 class="text-sm font-black text-slate-900 uppercase tracking-wide border-b pb-2">🛠️ Configura tu Perfil de Conductor</h3>
-            <div class="space-y-3 text-left text-xs">
-                <div>
-                    <label class="block font-bold text-slate-500 mb-1">📋 TIPO DE VEHÍCULO / SERVICIO:</label>
-                    <select id="reg-chofer-tipo" class="w-full p-2.5 bg-slate-50 border rounded-xl font-semibold">
-                        <option value="Motocar">🛺 Motocar (Pasajeros)</option>
-                        <option value="Auto / Carro">🚗 Auto / Carro Común</option>
-                        <option value="Furgón Carguero (Mudanza)">📦 Furgón Carguero (Mudanza)</option>
-                        <option value="Camión de Carga (Mudanza)">🚚 Camión de Carga Grande (Mudanza)</option>
-                    </select>
-                </div>
-                <div class="flex gap-2">
-                    <div class="flex-1">
-                        <label class="block font-bold text-slate-500 mb-1">🔢 NÚMERO DE PLACA:</label>
-                        <input type="text" id="reg-chofer-placa" placeholder="Ej: M-7041 o A1B-234" class="w-full p-2.5 bg-slate-50 border rounded-xl uppercase font-bold">
-                    </div>
-                    <div class="w-24">
-                        <label class="block font-bold text-slate-500 mb-1">🎂 EDAD:</label>
-                        <input type="number" id="reg-chofer-edad" placeholder="25" class="w-full p-2.5 bg-slate-50 border rounded-xl font-bold">
-                    </div>
-                </div>
-                <div>
-                    <label class="block font-bold text-slate-500 mb-1">📸 LINK / URL DE LA FOTO DEL VEHÍCULO:</label>
-                    <input type="text" id="reg-chofer-foto" placeholder="https://enlace-de-tu-foto.com/imagen.jpg" class="w-full p-2.5 bg-slate-50 border rounded-xl text-slate-600 text-[11px]">
-                    <p class="text-[10px] text-slate-400 mt-1">Sube la foto a ImgBB o Postimages y pega el enlace aquí.</p>
-                </div>
-                <button id="btn-guardar-perfil-chofer" class="w-full bg-emerald-500 text-white font-black py-3 rounded-xl uppercase tracking-wider shadow-md">
-                    Guardar Perfil y Activar Turno
-                </button>
-            </div>
-        </div>
-
-        <!-- ================= VISTA CONDUCTOR (PANEL TRABAJO) ================= -->
+        <!-- ================= VISTA CONDUCTOR ================= -->
         <div id="view-conductor" class="hidden space-y-3">
             <div class="bg-white rounded-3xl p-4 border border-slate-200 shadow-md">
                 <div class="flex justify-between items-center border-b pb-2 mb-3">
                     <h3 class="text-xs font-black">Panel Chofer: <span id="txt-nombre-chofer" class="text-amber-500"></span></h3>
-                    <button id="btn-editar-perfil" class="text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded font-bold border">⚙️ Editar Vehículo</button>
                 </div>
 
-                <h4 class="text-xs font-black text-slate-500 uppercase tracking-wider mb-2">📌 Solicitudes de Viajes / Mudanzas:</h4>
+                <h4 class="text-xs font-black text-slate-500 uppercase tracking-wider mb-2">📌 Solicitudes de Viajes Activos:</h4>
                 <div id="lista-pasajeros-disponibles" class="space-y-3"></div>
                 
                 <div id="no-viajes-msg" class="text-center py-8 text-slate-400 text-xs">
-                    <p>⌛ Esperando solicitudes satelitales en tiempo real...</p>
+                    <p>⌛ Esperando que un cliente lance coordenadas en tiempo real...</p>
                 </div>
 
                 <!-- Chat de subasta del lado del Conductor -->
@@ -162,7 +114,6 @@
         let coordenadasPasajeroActual = { lat: null, lng: null };
         let geoWatchId = null;
         let ciudadDetectadaActual = "Tu Ubicación";
-        let datosVehiculoChofer = null;
 
         document.getElementById('btn-logout').addEventListener('click', () => {
             if(geoWatchId) navigator.geolocation.clearWatch(geoWatchId);
@@ -175,29 +126,53 @@
             document.getElementById('txt-nombre-cliente').innerText = usuarioLogueado.nombre;
             obtenerCoordenadasEstiloWhatsApp();
         } else {
+            document.getElementById('view-conductor').classList.remove('hidden');
             document.getElementById('txt-nombre-chofer').innerText = usuarioLogueado.nombre;
-            comprobarPerfilVehiculo();
+            verificarPerfilYEscuchar();
         }
 
-        // --- SISTEMA GPS PASAJERO ---
+        // --- RASTREO SATELITAL OPTIMIZADO CON DETECCIÓN DE ESTADO ---
         function obtenerCoordenadasEstiloWhatsApp() {
-            if (!navigator.geolocation) return;
+            if (!navigator.geolocation) {
+                alert("Tu dispositivo móvil no cuenta con hardware GPS compatible.");
+                return;
+            }
+
             document.getElementById('geo-status-texto').innerText = "⏳ SOLICITANDO PERMISO DE GPS...";
 
-            navigator.geolocation.watchPosition(
+            const opcionesWhatsApp = { 
+                enableHighAccuracy: true, 
+                maximumAge: 0,
+                timeout: 10000 // Si en 10 segundos el hardware del móvil no responde, arroja error de GPS apagado
+            };
+
+            geoWatchId = navigator.geolocation.watchPosition(
                 async (pos) => {
                     coordenadasPasajeroActual.lat = pos.coords.latitude;
                     coordenadasPasajeroActual.lng = pos.coords.longitude;
                     
                     if(coordenadasPasajeroActual.lat && coordenadasPasajeroActual.lng) {
+                        navigator.geolocation.clearWatch(geoWatchId); 
                         await descubrirCiudadActual(coordenadasPasajeroActual.lat, coordenadasPasajeroActual.lng);
                         desbloquearBotonBuscar();
                     }
                 },
                 (error) => {
-                    document.getElementById('geo-status-texto').innerText = "🛺 POR FAVOR, ENCIENDE TU GPS";
+                    console.error("Error de lectura GPS:", error.message);
+                    const statusTexto = document.getElementById('geo-status-texto');
+                    const statusCoords = document.getElementById('geo-coordenadas');
+                    
+                    if (error.code === 1) {
+                        statusTexto.innerText = "❌ PERMISO DENEGADO";
+                        statusCoords.innerText = "Por favor, dale 'Permitir ubicación' en la barra de Chrome.";
+                        alert("MoyoApp necesita tu ubicación. Habilita el permiso en la parte superior del navegador.");
+                    } else {
+                        statusTexto.innerText = "🛺 POR FAVOR, ENCIENDE TU GPS";
+                        statusCoords.innerText = "Desliza la barra de tu móvil y activa el botón de 'Ubicación'.";
+                        alert("¡Tu antena GPS parece estar desactivada! Desliza tu pantalla hacia abajo y activa la 'Ubicación' o 'GPS' en tu celular para poder pedir tu unidad.");
+                    }
                 },
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+                opcionesWhatsApp
             );
         }
 
@@ -207,7 +182,7 @@
                 const data = await response.json();
                 ciudadDetectadaActual = data.address.city || data.address.town || data.address.village || "Tu Ubicación";
                 document.getElementById('app-dinamica-titulo').innerText = `🛺 MOYOAPP - ${ciudadDetectadaActual.toUpperCase()}`;
-                document.getElementById('solicitud-destino').placeholder = `Ej: Plaza o Punto de entrega en ${ciudadDetectadaActual}`;
+                document.getElementById('solicitud-destino').placeholder = `Ej: Plaza de Armas de ${ciudadDetectadaActual}`;
             } catch {
                 document.getElementById('solicitud-destino').placeholder = "Ej: Ingresa tu destino";
             }
@@ -221,13 +196,12 @@
             const btn = document.getElementById('btn-buscar-moto');
             btn.disabled = false;
             btn.className = "w-full bg-amber-400 text-slate-900 font-black py-4 rounded-xl text-xs uppercase shadow-md active:scale-95 transition";
-            btn.innerText = "Buscar Servicio Disponible";
+            btn.innerText = "Buscar Conductores Disponibles";
         }
 
         async function lanzarSolicitudConGPS() {
-            const dest = document.getElementById('solicitud-destino').value.trim() || "Destino General";
+            const dest = document.getElementById('solicitud-destino').value.trim() || "Destino Desconocido";
             const prec = document.getElementById('solicitud-precio').value;
-            const servicio = document.getElementById('solicitud-tipo-servicio').value;
             viajeIdActual = "viaje_" + usuarioLogueado.id;
 
             await setDoc(doc(db, "viajes", viajeIdActual), {
@@ -238,10 +212,9 @@
                 longitudRecojo: coordenadasPasajeroActual.lng,
                 direccionDestino: dest,
                 precioOferta: prec,
-                tipoServicio: servicio,
                 ciudadOrigen: ciudadDetectadaActual,
                 estado: "BUSCANDO",
-                mensajes: [{ remitente: "sistema", texto: `🤖 Solicitud de ${servicio} enviada por GPS.` }]
+                mensajes: [{ remitente: "sistema", texto: "🤖 Solicitud enviada en tiempo real por GPS." }]
             });
 
             document.getElementById('view-pasajero-solicitud').classList.add('hidden');
@@ -254,73 +227,26 @@
             onSnapshot(doc(db, "viajes", viajeIdActual), (docSnap) => {
                 if(!docSnap.exists()) return;
                 const v = docSnap.data();
-                
                 if(v.conductorNombre) {
-                    document.getElementById('perfil-chofer-asignado').classList.remove('hidden');
                     document.getElementById('chat-p-chofer-nombre').innerText = v.conductorNombre;
-                    document.getElementById('chat-p-chofer-tipo').innerText = v.conductorVehiculoTipo || "No especificado";
-                    document.getElementById('chat-p-chofer-placa').innerText = v.conductorPlaca || "---";
-                    document.getElementById('chat-p-chofer-edad').innerText = v.conductorEdad || "--";
-                    document.getElementById('chat-p-chofer-foto').src = v.conductorFoto || "https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?w=150";
+                    document.getElementById('chat-p-chofer-placa').innerText = v.conductorPlaca || "M-1022";
                 }
-
                 renderizarBurbujasChat(v.mensajes, 'pasajero');
                 if (v.estado === "EN_CAMINO") {
                     const status = document.getElementById('status-viaje-cliente');
                     status.classList.remove('hidden');
-                    status.innerText = `✅ ¡Trato cerrado! Tu unidad viene por S/. ${v.precioOferta}`;
+                    status.innerText = `✅ ¡Trato cerrado! Tu moto viene por S/. ${v.precioOferta}`;
                 }
-                if (v.estado === "FINALIZADO") { alert("Servicio completado exitosamente."); localStorage.clear(); location.reload(); }
+                if (v.estado === "FINALIZADO") { alert("Viaje Completado."); localStorage.clear(); location.reload(); }
             });
         }
 
-        // --- GESTIÓN DE PERFIL DEL CONDUCTOR (MUDANZAS Y VEHÍCULOS) ---
-        async function comprobarPerfilVehiculo() {
+        async function verificarPerfilYEscuchar() {
             const docRef = doc(db, "conductores", usuarioLogueado.id);
             let dSnap = await getDoc(docRef);
-            
-            if(dSnap.exists() && dSnap.data().placa) {
-                datosVehiculoChofer = dSnap.data();
-                activarPanelTrabajoChofer();
-            } else {
-                abrirFormularioRegistroVehiculo();
+            if(!dSnap.exists()) {
+                await setDoc(docRef, { id: usuarioLogueado.id, nombre: usuarioLogueado.nombre, placa: "M-7041", rol: "conductor" });
             }
-        }
-
-        function abrirFormularioRegistroVehiculo() {
-            document.getElementById('view-conductor').classList.add('hidden');
-            document.getElementById('view-conductor-registro').classList.remove('hidden');
-        }
-
-        document.getElementById('btn-guardar-perfil-chofer').addEventListener('click', async () => {
-            const tipo = document.getElementById('reg-chofer-tipo').value;
-            const placa = document.getElementById('reg-chofer-placa').value.trim();
-            const edad = document.getElementById('reg-chofer-edad').value.trim();
-            const foto = document.getElementById('reg-chofer-foto').value.trim();
-
-            if(!placa || !edad) { alert("Completa la placa y edad"); return; }
-
-            const datos = {
-                id: usuarioLogueado.id,
-                nombre: usuarioLogueado.nombre,
-                vehiculoTipo: tipo,
-                placa: placa,
-                edad: edad,
-                foto: foto || "https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?w=150",
-                rol: "conductor"
-            };
-
-            await setDoc(doc(db, "conductores", usuarioLogueado.id), datos);
-            datosVehiculoChofer = datos;
-            
-            document.getElementById('view-conductor-registro').classList.add('hidden');
-            activarPanelTrabajoChofer();
-        });
-
-        document.getElementById('btn-editar-perfil').addEventListener('click', abrirFormularioRegistroVehiculo);
-
-        function activarPanelTrabajoChofer() {
-            document.getElementById('view-conductor').classList.remove('hidden');
             escucharRutasComoConductor();
         }
 
@@ -338,15 +264,14 @@
                         document.getElementById('no-viajes-msg').classList.add('hidden');
 
                         const card = document.createElement('div');
-                        card.className = "bg-slate-900 text-white p-3 rounded-xl space-y-2 text-xs border border-slate-700";
+                        card.className = "bg-slate-900 text-white p-3 rounded-xl space-y-2 text-xs";
                         card.innerHTML = `
                             <div class="flex justify-between font-black text-amber-400">
                                 <span>👤 ${v.clienteNombre} (${v.ciudadOrigen || 'GPS'})</span>
-                                <span class="bg-amber-400 text-slate-950 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold">${v.tipoServicio || 'Viaje'}</span>
+                                <span>S/. ${v.precioOferta}</span>
                             </div>
                             <p class="text-slate-300">🏁 Destino: ${v.direccionDestino}</p>
-                            <p class="text-amber-300 font-bold">💰 Oferta: S/. ${v.precioOferta}</p>
-                            <div class="flex gap-2 pt-1">
+                            <div class="flex gap-2">
                                 <button class="flex-1 bg-amber-400 text-slate-900 py-2 rounded text-[10px] uppercase font-black atender-btn" 
                                         data-id="${v.id}" 
                                         data-lat="${v.latitudRecojo}" 
@@ -369,7 +294,7 @@
 
                         document.getElementById('seccion-negociacion-conductor').classList.remove('hidden');
                         
-                        const abrirMaps = confirm("¿Deseas abrir Google Maps para ver la ubicación del cliente?");
+                        const abrirMaps = confirm("¿Deseas abrir Google Maps para ver la ubicación exacta del pasajero?");
                         if (abrirMaps) {
                             window.open(`https://www.google.com/maps/search/?api=1&query=${latCliente},${lngCliente}`, '_blank');
                         }
@@ -389,43 +314,21 @@
             });
         }
 
-        // --- SUB-SISTEMA CHAT ---
+        // --- CHAT ---
         async function enviarMensajeChat(rol) {
             const input = document.getElementById(`input-msg-${rol}`);
             if(!input.value.trim()) return;
-            
-            const p = { 
-                mensajes: arrayUnion({ remitente: rol, texto: input.value.trim() }), 
-                estado: "NEGOCIANDO" 
-            };
-            
-            if(rol === 'conductor') { 
-                p.conductorId = usuarioLogueado.id; 
-                p.conductorNombre = usuarioLogueado.nombre; 
-                p.conductorPlaca = datosVehiculoChofer.placa;
-                p.conductorVehiculoTipo = datosVehiculoChofer.vehiculoTipo;
-                p.conductorEdad = datosVehiculoChofer.edad;
-                p.conductorFoto = datosVehiculoChofer.foto;
-            }
-            
+            const p = { mensajes: arrayUnion({ remitente: rol, texto: input.value.trim() }), estado: "NEGOCIANDO" };
+            if(rol==='conductor') { p.conductorId = usuarioLogueado.id; p.conductorNombre = usuarioLogueado.nombre; p.conductorPlaca="M-7041"; }
             await updateDoc(doc(db, "viajes", viajeIdActual), p);
             input.value = "";
         }
-        
         document.getElementById('btn-send-pasajero').addEventListener('click', () => enviarMensajeChat('pasajero'));
         document.getElementById('btn-send-conductor').addEventListener('click', () => enviarMensajeChat('conductor'));
 
         async function pactarTarifaTrato() {
             const p = prompt("Precio final pactado (S/.):"); if(!p) return;
-            await updateDoc(doc(db, "viajes", viajeIdActual), { 
-                estado: "EN_CAMINO", 
-                precioOferta: p, 
-                conductorId: usuarioLogueado.id, 
-                conductorNombre: usuarioLogueado.nombre, 
-                conductorPlaca: datosVehiculoChofer.placa,
-                conductorVehiculoTipo: datosVehiculoChofer.vehiculoTipo,
-                conductorFoto: datosVehiculoChofer.foto
-            });
+            await updateDoc(doc(db, "viajes", viajeIdActual), { estado: "EN_CAMINO", precioOferta: p, conductorId: usuarioLogueado.id, conductorNombre: usuarioLogueado.nombre, conductorPlaca: "M-7041" });
         }
         document.getElementById('btn-cerrar-trato').addEventListener('click', pactarTarifaTrato);
 
@@ -435,6 +338,14 @@
         }
         document.getElementById('btn-finalizar').addEventListener('click', concluirViajeMoyo);
 
+        fn-renderizarBurbujasChat(msjs, rol) {
+            let h = ""; if(!msjs) return;
+            msjs.forEach(m => {
+                if(m.remitente==='sistema') h += `<p class="text-[10px] text-center text-slate-400 italic">${m.texto}</p>`;
+                else h += `<p class="p-1.5 rounded-lg text-xs max-w-[85%] ${m.remitente===rol?'bg-amber-300 self-end':'bg-slate-200 self-start'}">${m.texto}</p>`;
+            });
+            const b = document.getElementById(`chat-box-${rol}`); if(b) { b.innerHTML = h; b.scrollTop = b.scrollHeight; }
+        }
         function renderizarBurbujasChat(msjs, rol) {
             let h = ""; if(!msjs) return;
             msjs.forEach(m => {
